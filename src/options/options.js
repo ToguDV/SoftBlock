@@ -51,14 +51,14 @@ function createDomainItem(domain) {
   const removeButton = document.createElement("button");
   removeButton.type = "button";
   removeButton.className = "remove-button";
-  removeButton.textContent = "Eliminar";
+  removeButton.textContent = "Remove";
 
   removeButton.addEventListener("click", async () => {
     const domains = await getDomains();
     const nextDomains = domains.filter((entry) => entry !== domain);
     await saveDomains(nextDomains);
     await renderDomains();
-    setFeedback(`Listo, quitamos ${domain} de tu lista.`);
+    setFeedback(`Done, we removed ${domain} from your list.`);
   });
 
   item.appendChild(name);
@@ -73,7 +73,7 @@ async function renderDomains() {
   if (!domains.length) {
     const empty = document.createElement("li");
     empty.className = "empty-state";
-    empty.textContent = "Aun no agregaste dominios. Puedes empezar con uno que te distraiga seguido.";
+    empty.textContent = "You have not added any domains yet. Start with one that distracts you often.";
     domainList.appendChild(empty);
     return;
   }
@@ -87,13 +87,13 @@ async function addDomain() {
   const normalized = normalizeDomain(domainInput.value);
 
   if (!normalized) {
-    setFeedback("Escribe un dominio valido, por ejemplo: youtube.com", true);
+    setFeedback("Enter a valid domain, for example: youtube.com", true);
     return;
   }
 
   const domains = await getDomains();
   if (domains.includes(normalized)) {
-    setFeedback("Ese dominio ya esta en tu lista.", true);
+    setFeedback("That domain is already in your list.", true);
     return;
   }
 
@@ -102,12 +102,12 @@ async function addDomain() {
 
   domainInput.value = "";
   await renderDomains();
-  setFeedback(`Perfecto, guardamos ${normalized}.`);
+  setFeedback(`Great, we saved ${normalized}.`);
 }
 
 addDomainButton.addEventListener("click", () => {
   addDomain().catch(() => {
-    setFeedback("No pudimos guardar el dominio. Intentalo otra vez.", true);
+    setFeedback("We could not save the domain. Please try again.", true);
   });
 });
 
@@ -119,5 +119,5 @@ domainInput.addEventListener("keydown", (event) => {
 });
 
 renderDomains().catch(() => {
-  setFeedback("No pudimos cargar tus dominios por ahora.", true);
+  setFeedback("We could not load your domains right now.", true);
 });

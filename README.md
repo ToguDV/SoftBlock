@@ -1,18 +1,18 @@
 # SoftBlock
 
-Extension de Chrome (Manifest V3) para tomar una decision consciente al abrir sitios definidos por el usuario.
+Chrome extension (Manifest V3) to make a conscious decision when opening user-defined sites.
 
-## Funcionalidades
+## Features
 
-- Lista de dominios bloqueados administrada desde la pagina de opciones.
-- Deteccion automatica al navegar o cambiar de ruta en sitios SPA.
-- Popup bloqueante en la pagina con decision obligatoria:
-  - Continuar (elige 1, 5, 15 o 30 minutos para re-preguntar en la misma pestana).
-  - No continuar (cierra la pestana).
-- Incluye subdominios automaticamente.
-- Persistencia local con `chrome.storage.local`.
+- Blocked domain list managed from the options page.
+- Automatic detection when browsing or changing routes on SPA sites.
+- Blocking in-page popup with a required decision:
+  - Continue (choose 1, 5, 15, or 30 minutes before being asked again in the same tab).
+  - Do not continue (closes the tab).
+- Includes subdomains automatically.
+- Local persistence with `chrome.storage.local`.
 
-## Estructura
+## Structure
 
 - `manifest.json`
 - `src/background/service-worker.js`
@@ -21,14 +21,14 @@ Extension de Chrome (Manifest V3) para tomar una decision consciente al abrir si
 - `src/options/options.js`
 - `src/options/options.css`
 
-## Cargar en Chrome
+## Load in Chrome
 
-1. Abrir `chrome://extensions`.
-2. Activar modo desarrollador.
-3. Click en "Load unpacked".
-4. Seleccionar esta carpeta.
-5. Abrir opciones de la extension y agregar dominios.
+1. Open `chrome://extensions`.
+2. Enable Developer mode.
+3. Click "Load unpacked".
+4. Select this folder.
+5. Open the extension options and add domains.
 
-## Nota
+## Note
 
-La extension no puede ejecutarse sobre paginas internas del navegador (`chrome://`).
+The extension cannot run on internal browser pages (`chrome://`).

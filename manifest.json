@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "SoftBlock",
   "version": "1.0.0",
-  "description": "Extension para tomar una decision consciente al entrar a dominios bloqueados.",
+  "description": "Extension to make a conscious decision when entering blocked domains.",
   "permissions": [
     "storage",
     "tabs",

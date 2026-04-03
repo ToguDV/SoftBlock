@@ -49,19 +49,19 @@
     panel.style.boxShadow = "0 30px 70px rgba(0,0,0,0.5)";
 
     const title = document.createElement("h2");
-    title.textContent = "Pausa consciente";
+    title.textContent = "Mindful pause";
     title.style.margin = "0 0 10px";
     title.style.fontSize = "24px";
     title.style.letterSpacing = "0.01em";
 
     const subtitle = document.createElement("p");
-    subtitle.textContent = `Estas por entrar a ${domain}, que esta en tu lista de pausa.`;
+    subtitle.textContent = `You are about to enter ${domain}, which is on your pause list.`;
     subtitle.style.margin = "0 0 16px";
     subtitle.style.lineHeight = "1.4";
     subtitle.style.color = "#d4c8ee";
 
     const selectLabel = document.createElement("label");
-    selectLabel.textContent = "Si decides continuar, volver a preguntar en:";
+    selectLabel.textContent = "If you decide to continue, ask again in:";
     selectLabel.style.display = "block";
     selectLabel.style.marginBottom = "6px";
     selectLabel.style.fontSize = "14px";
@@ -78,7 +78,7 @@
     allowedMinutes.forEach((minutes) => {
       const option = document.createElement("option");
       option.value = String(minutes);
-      option.textContent = `${minutes} minuto${minutes === 1 ? "" : "s"}`;
+      option.textContent = `${minutes} minute${minutes === 1 ? "" : "s"}`;
       if (minutes === defaultMinutes) {
         option.selected = true;
       }
@@ -90,7 +90,7 @@
     actions.style.gap = "10px";
 
     const continueButton = document.createElement("button");
-    continueButton.textContent = "Continuar";
+    continueButton.textContent = "Continue";
     continueButton.style.flex = "1";
     continueButton.style.padding = "11px";
     continueButton.style.background = "linear-gradient(150deg, #c39dff 0%, #8b5cf6 100%)";
@@ -101,7 +101,7 @@
     continueButton.style.fontWeight = "600";
 
     const cancelButton = document.createElement("button");
-    cancelButton.textContent = "Cerrar pestana";
+    cancelButton.textContent = "Close tab";
     cancelButton.style.flex = "1";
     cancelButton.style.padding = "11px";
     cancelButton.style.background = "linear-gradient(140deg, #ff95ac 0%, #f16887 100%)";
@@ -112,7 +112,7 @@
     cancelButton.style.fontWeight = "600";
 
     const hint = document.createElement("p");
-    hint.textContent = "Elige una opcion para continuar con claridad.";
+    hint.textContent = "Choose an option to continue with clarity.";
     hint.style.margin = "12px 0 0";
     hint.style.fontSize = "13px";
     hint.style.color = "#ac9acb";
@@ -141,7 +141,7 @@
     cancelButton.addEventListener("click", () => {
       cancelButton.disabled = true;
       continueButton.disabled = true;
-      cancelButton.textContent = "Cerrando...";
+      cancelButton.textContent = "Closing...";
       chrome.runtime.sendMessage({ type: "SOFTBLOCK_CANCEL" }).catch(() => {});
     });
 

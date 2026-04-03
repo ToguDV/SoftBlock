@@ -1,30 +1,30 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SoftBlock - Dominios</title>
+    <title>SoftBlock - Domains</title>
     <link rel="stylesheet" href="./options.css" />
   </head>
   <body>
     <main class="container">
       <header class="header">
-        <p class="eyebrow">Pausa digital</p>
+        <p class="eyebrow">Digital pause</p>
         <h1>SoftBlock</h1>
-        <p>Define los sitios que quieres revisar con calma antes de entrar.</p>
+        <p>Choose the sites you want to review calmly before entering.</p>
       </header>
 
       <section class="card">
-        <label for="domainInput">Agregar dominio</label>
+        <label for="domainInput">Add domain</label>
         <div class="row">
-          <input id="domainInput" type="text" placeholder="ej: youtube.com" autocomplete="off" />
-          <button id="addDomainButton" type="button">Guardar</button>
+          <input id="domainInput" type="text" placeholder="e.g. youtube.com" autocomplete="off" />
+          <button id="addDomainButton" type="button">Save</button>
         </div>
         <p id="feedback" class="feedback" aria-live="polite"></p>
       </section>
 
       <section class="card">
-        <h2>Dominios bloqueados</h2>
+        <h2>Blocked domains</h2>
         <ul id="domainList" class="domain-list"></ul>
       </section>
     </main>
