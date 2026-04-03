@@ -1,7 +1,11 @@
 (() => {
   const OVERLAY_ID = "softblock-overlay";
+  const OVERLAY_HOST_ID = "softblock-overlay-host";
   const DEFAULT_CONTINUE_COOLDOWN_SECONDS = 5;
   let activeCooldownInterval = null;
+  let previousHtmlOverflow = "";
+  let previousBodyOverflow = "";
+  let isScrollLocked = false;
 
   function currentHostname() {
     try {
@@ -18,16 +22,47 @@
     }).catch(() => {});
   }
 
+  function lockPageScroll() {
+    if (isScrollLocked) {
+      return;
+    }
+
+    previousHtmlOverflow = document.documentElement.style.overflow;
+    previousBodyOverflow = document.body ? document.body.style.overflow : "";
+
+    document.documentElement.style.overflow = "hidden";
+    if (document.body) {
+      document.body.style.overflow = "hidden";
+    }
+
+    isScrollLocked = true;
+  }
+
+  function unlockPageScroll() {
+    if (!isScrollLocked) {
+      return;
+    }
+
+    document.documentElement.style.overflow = previousHtmlOverflow;
+    if (document.body) {
+      document.body.style.overflow = previousBodyOverflow;
+    }
+
+    isScrollLocked = false;
+  }
+
   function removeOverlay() {
     if (activeCooldownInterval) {
       clearInterval(activeCooldownInterval);
       activeCooldownInterval = null;
     }
 
-    const existing = document.getElementById(OVERLAY_ID);
+    const existing = document.getElementById(OVERLAY_HOST_ID);
     if (existing) {
       existing.remove();
     }
+
+    unlockPageScroll();
   }
 
   function sanitizeCooldownSeconds(rawValue) {
@@ -50,55 +85,140 @@
 
   function createOverlay({ domain, allowedMinutes, defaultMinutes, continueCooldownSeconds }) {
     removeOverlay();
+    lockPageScroll();
+
+    const host = document.createElement("div");
+    host.id = OVERLAY_HOST_ID;
+    host.style.position = "fixed";
+    host.style.inset = "0";
+    host.style.zIndex = "2147483647";
+
+    const shadow = host.attachShadow({ mode: "open" });
+
+    const styles = document.createElement("style");
+    styles.textContent = `
+      :host {
+        all: initial;
+      }
+
+      .softblock-overlay,
+      .softblock-overlay * {
+        box-sizing: border-box;
+      }
+
+      .softblock-overlay {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px;
+        background: radial-gradient(circle at 20% 10%, rgba(89, 45, 156, 0.35) 0%, rgba(5, 4, 10, 0.82) 55%, rgba(5, 4, 10, 0.88) 100%);
+        backdrop-filter: blur(5px);
+      }
+
+      .softblock-panel {
+        width: min(460px, 100%);
+        padding: 22px;
+        border: 1px solid rgba(184, 147, 255, 0.45);
+        border-radius: 18px;
+        background: linear-gradient(160deg, #1b1231 0%, #120c24 100%);
+        color: #f5f1ff;
+        font-family: Poppins, Nunito Sans, Trebuchet MS, sans-serif;
+        box-shadow: 0 30px 70px rgba(0, 0, 0, 0.5);
+      }
+
+      .softblock-title {
+        margin: 0 0 10px;
+        font-size: 24px;
+        letter-spacing: 0.01em;
+      }
+
+      .softblock-subtitle {
+        margin: 0 0 16px;
+        line-height: 1.4;
+        color: #d4c8ee;
+      }
+
+      .softblock-label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 14px;
+      }
+
+      .softblock-select {
+        width: 100%;
+        margin-bottom: 16px;
+        padding: 10px;
+        border: 1px solid rgba(184, 147, 255, 0.5);
+        border-radius: 10px;
+        background: rgba(11, 8, 24, 0.8);
+        color: #f5f1ff;
+      }
+
+      .softblock-actions {
+        display: flex;
+        gap: 10px;
+      }
+
+      .softblock-button {
+        flex: 1;
+        padding: 11px;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      .softblock-button:disabled {
+        opacity: 0.6;
+        cursor: default;
+      }
+
+      .softblock-button-continue {
+        background: linear-gradient(150deg, #c39dff 0%, #8b5cf6 100%);
+        color: #160b28;
+      }
+
+      .softblock-button-cancel {
+        background: linear-gradient(140deg, #ff95ac 0%, #f16887 100%);
+        color: #290613;
+      }
+
+      .softblock-countdown {
+        margin: 10px 0 0;
+        font-size: 13px;
+        color: #cbbbe7;
+      }
+
+      .softblock-hint {
+        margin: 12px 0 0;
+        font-size: 13px;
+        color: #ac9acb;
+      }
+    `;
 
     const overlay = document.createElement("div");
     overlay.id = OVERLAY_ID;
-    overlay.style.position = "fixed";
-    overlay.style.inset = "0";
-    overlay.style.zIndex = "2147483647";
-    overlay.style.background = "radial-gradient(circle at 20% 10%, rgba(89, 45, 156, 0.35) 0%, rgba(5, 4, 10, 0.82) 55%, rgba(5, 4, 10, 0.88) 100%)";
-    overlay.style.display = "flex";
-    overlay.style.alignItems = "center";
-    overlay.style.justifyContent = "center";
-    overlay.style.backdropFilter = "blur(5px)";
-    overlay.style.padding = "16px";
+    overlay.className = "softblock-overlay";
 
     const panel = document.createElement("div");
-    panel.style.width = "min(460px, 100%)";
-    panel.style.background = "linear-gradient(160deg, #1b1231 0%, #120c24 100%)";
-    panel.style.color = "#f5f1ff";
-    panel.style.border = "1px solid rgba(184, 147, 255, 0.45)";
-    panel.style.borderRadius = "18px";
-    panel.style.padding = "22px";
-    panel.style.fontFamily = "Poppins, Nunito Sans, Trebuchet MS, sans-serif";
-    panel.style.boxShadow = "0 30px 70px rgba(0,0,0,0.5)";
+    panel.className = "softblock-panel";
 
     const title = document.createElement("h2");
     title.textContent = "Mindful pause";
-    title.style.margin = "0 0 10px";
-    title.style.fontSize = "24px";
-    title.style.letterSpacing = "0.01em";
+    title.className = "softblock-title";
 
     const subtitle = document.createElement("p");
     subtitle.textContent = `You are about to enter ${domain}, which is on your pause list.`;
-    subtitle.style.margin = "0 0 16px";
-    subtitle.style.lineHeight = "1.4";
-    subtitle.style.color = "#d4c8ee";
+    subtitle.className = "softblock-subtitle";
 
     const selectLabel = document.createElement("label");
     selectLabel.textContent = "If you decide to continue, ask again in:";
-    selectLabel.style.display = "block";
-    selectLabel.style.marginBottom = "6px";
-    selectLabel.style.fontSize = "14px";
+    selectLabel.className = "softblock-label";
 
     const select = document.createElement("select");
-    select.style.width = "100%";
-    select.style.padding = "10px";
-    select.style.borderRadius = "10px";
-    select.style.border = "1px solid rgba(184, 147, 255, 0.5)";
-    select.style.background = "rgba(11, 8, 24, 0.8)";
-    select.style.color = "#f5f1ff";
-    select.style.marginBottom = "16px";
+    select.className = "softblock-select";
 
     allowedMinutes.forEach((minutes) => {
       const option = document.createElement("option");
@@ -111,41 +231,22 @@
     });
 
     const actions = document.createElement("div");
-    actions.style.display = "flex";
-    actions.style.gap = "10px";
+    actions.className = "softblock-actions";
 
     const continueButton = document.createElement("button");
     continueButton.textContent = "Continue";
-    continueButton.style.flex = "1";
-    continueButton.style.padding = "11px";
-    continueButton.style.background = "linear-gradient(150deg, #c39dff 0%, #8b5cf6 100%)";
-    continueButton.style.color = "#160b28";
-    continueButton.style.border = "none";
-    continueButton.style.borderRadius = "10px";
-    continueButton.style.cursor = "pointer";
-    continueButton.style.fontWeight = "600";
+    continueButton.className = "softblock-button softblock-button-continue";
 
     const cancelButton = document.createElement("button");
     cancelButton.textContent = "Close tab";
-    cancelButton.style.flex = "1";
-    cancelButton.style.padding = "11px";
-    cancelButton.style.background = "linear-gradient(140deg, #ff95ac 0%, #f16887 100%)";
-    cancelButton.style.color = "#290613";
-    cancelButton.style.border = "none";
-    cancelButton.style.borderRadius = "10px";
-    cancelButton.style.cursor = "pointer";
-    cancelButton.style.fontWeight = "600";
+    cancelButton.className = "softblock-button softblock-button-cancel";
 
     const hint = document.createElement("p");
     hint.textContent = "Choose an option to continue with clarity.";
-    hint.style.margin = "12px 0 0";
-    hint.style.fontSize = "13px";
-    hint.style.color = "#ac9acb";
+    hint.className = "softblock-hint";
 
     const countdown = document.createElement("p");
-    countdown.style.margin = "10px 0 0";
-    countdown.style.fontSize = "13px";
-    countdown.style.color = "#cbbbe7";
+    countdown.className = "softblock-countdown";
     countdown.setAttribute("aria-live", "polite");
 
     const initialCooldown = sanitizeCooldownSeconds(continueCooldownSeconds);
@@ -188,6 +289,8 @@
     panel.appendChild(countdown);
     panel.appendChild(hint);
     overlay.appendChild(panel);
+    shadow.appendChild(styles);
+    shadow.appendChild(overlay);
 
     continueButton.addEventListener("click", () => {
       const minutes = Number(select.value);
@@ -206,7 +309,7 @@
       chrome.runtime.sendMessage({ type: "SOFTBLOCK_CANCEL" }).catch(() => {});
     });
 
-    document.documentElement.appendChild(overlay);
+    document.documentElement.appendChild(host);
   }
 
   chrome.runtime.onMessage.addListener((message) => {
