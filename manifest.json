@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "SoftBlock",
+  "version": "1.0.0",
+  "description": "Extension para tomar una decision consciente al entrar a dominios bloqueados.",
+  "permissions": [
+    "storage",
+    "tabs",
+    "alarms",
+    "webNavigation"
+  ],
+  "host_permissions": [
+    "http://*/*",
+    "https://*/*"
+  ],
+  "background": {
+    "service_worker": "src/background/service-worker.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "http://*/*",
+        "https://*/*"
+      ],
+      "js": [
+        "src/content/content-script.js"
+      ],
+      "run_at": "document_start"
+    }
+  ],
+  "options_page": "src/options/options.html",
+  "action": {
+    "default_title": "SoftBlock"
+  }
+}

@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SoftBlock - Dominios</title>
+    <link rel="stylesheet" href="./options.css" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="header">
+        <h1>SoftBlock</h1>
+        <p>Agrega dominios para activar una pausa consciente al intentar entrar.</p>
+      </header>
+
+      <section class="card">
+        <label for="domainInput">Nuevo dominio</label>
+        <div class="row">
+          <input id="domainInput" type="text" placeholder="ej: youtube.com" autocomplete="off" />
+          <button id="addDomainButton" type="button">Agregar</button>
+        </div>
+        <p id="feedback" class="feedback" aria-live="polite"></p>
+      </section>
+
+      <section class="card">
+        <h2>Dominios bloqueados</h2>
+        <ul id="domainList" class="domain-list"></ul>
+      </section>
+    </main>
+
+    <script src="./options.js"></script>
+  </body>
+</html>
