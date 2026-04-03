@@ -1,5 +1,7 @@
 (() => {
   const OVERLAY_ID = "softblock-overlay";
+  const DEFAULT_CONTINUE_COOLDOWN_SECONDS = 5;
+  let activeCooldownInterval = null;
 
   function currentHostname() {
     try {
@@ -17,13 +19,36 @@
   }
 
   function removeOverlay() {
+    if (activeCooldownInterval) {
+      clearInterval(activeCooldownInterval);
+      activeCooldownInterval = null;
+    }
+
     const existing = document.getElementById(OVERLAY_ID);
     if (existing) {
       existing.remove();
     }
   }
 
-  function createOverlay({ domain, allowedMinutes, defaultMinutes }) {
+  function sanitizeCooldownSeconds(rawValue) {
+    const parsed = Number(rawValue);
+    if (!Number.isFinite(parsed)) {
+      return DEFAULT_CONTINUE_COOLDOWN_SECONDS;
+    }
+
+    const rounded = Math.round(parsed);
+    if (rounded < 0) {
+      return 0;
+    }
+
+    if (rounded > 60) {
+      return 60;
+    }
+
+    return rounded;
+  }
+
+  function createOverlay({ domain, allowedMinutes, defaultMinutes, continueCooldownSeconds }) {
     removeOverlay();
 
     const overlay = document.createElement("div");
@@ -117,6 +142,41 @@
     hint.style.fontSize = "13px";
     hint.style.color = "#ac9acb";
 
+    const countdown = document.createElement("p");
+    countdown.style.margin = "10px 0 0";
+    countdown.style.fontSize = "13px";
+    countdown.style.color = "#cbbbe7";
+    countdown.setAttribute("aria-live", "polite");
+
+    const initialCooldown = sanitizeCooldownSeconds(continueCooldownSeconds);
+    let remainingSeconds = initialCooldown;
+
+    const renderCountdown = () => {
+      if (remainingSeconds > 0) {
+        continueButton.disabled = true;
+        continueButton.textContent = "🔒 Continue";
+        countdown.textContent = `Continue unlocks in ${remainingSeconds} second${remainingSeconds === 1 ? "" : "s"}.`;
+        return;
+      }
+
+      continueButton.disabled = false;
+      continueButton.textContent = "Continue";
+      countdown.textContent = "You can continue now.";
+    };
+
+    renderCountdown();
+    if (remainingSeconds > 0) {
+      activeCooldownInterval = window.setInterval(() => {
+        remainingSeconds -= 1;
+        renderCountdown();
+
+        if (remainingSeconds <= 0 && activeCooldownInterval) {
+          clearInterval(activeCooldownInterval);
+          activeCooldownInterval = null;
+        }
+      }, 1000);
+    }
+
     actions.appendChild(continueButton);
     actions.appendChild(cancelButton);
 
@@ -125,6 +185,7 @@
     panel.appendChild(selectLabel);
     panel.appendChild(select);
     panel.appendChild(actions);
+    panel.appendChild(countdown);
     panel.appendChild(hint);
     overlay.appendChild(panel);
 
@@ -168,7 +229,8 @@
     createOverlay({
       domain: expectedDomain,
       allowedMinutes: Array.isArray(message.allowedMinutes) ? message.allowedMinutes : [1, 5, 15, 30],
-      defaultMinutes: Number(message.defaultMinutes) || 5
+      defaultMinutes: Number(message.defaultMinutes) || 5,
+      continueCooldownSeconds: message.continueCooldownSeconds
     });
   });
 

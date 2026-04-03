@@ -1,11 +1,32 @@
 const BLOCKED_DOMAINS_KEY = "blockedDomains";
 const ALLOWANCES_KEY = "allowances";
+const CONTINUE_COOLDOWN_SECONDS_KEY = "continueCooldownSeconds";
 const ALLOWED_MINUTES = [1, 5, 15, 30];
 const DEFAULT_MINUTES = 5;
+const DEFAULT_CONTINUE_COOLDOWN_SECONDS = 5;
 const ALARM_PREFIX = "softblock";
 
 let blockedDomains = [];
 let allowances = {};
+let continueCooldownSeconds = DEFAULT_CONTINUE_COOLDOWN_SECONDS;
+
+function sanitizeCooldownSeconds(rawValue) {
+  const parsed = Number(rawValue);
+  if (!Number.isFinite(parsed)) {
+    return DEFAULT_CONTINUE_COOLDOWN_SECONDS;
+  }
+
+  const rounded = Math.round(parsed);
+  if (rounded < 0) {
+    return 0;
+  }
+
+  if (rounded > 60) {
+    return 60;
+  }
+
+  return rounded;
+}
 
 function normalizeDomain(rawValue) {
   if (!rawValue || typeof rawValue !== "string") {
@@ -68,7 +89,11 @@ async function saveAllowances() {
 }
 
 async function loadState() {
-  const data = await chrome.storage.local.get([BLOCKED_DOMAINS_KEY, ALLOWANCES_KEY]);
+  const data = await chrome.storage.local.get([
+    BLOCKED_DOMAINS_KEY,
+    ALLOWANCES_KEY,
+    CONTINUE_COOLDOWN_SECONDS_KEY
+  ]);
 
   const loadedDomains = Array.isArray(data[BLOCKED_DOMAINS_KEY]) ? data[BLOCKED_DOMAINS_KEY] : [];
   blockedDomains = [...new Set(loadedDomains.map(normalizeDomain).filter(Boolean))];
@@ -77,6 +102,7 @@ async function loadState() {
     ? data[ALLOWANCES_KEY]
     : {};
   allowances = loadedAllowances;
+  continueCooldownSeconds = sanitizeCooldownSeconds(data[CONTINUE_COOLDOWN_SECONDS_KEY]);
 
   await pruneExpiredAllowances();
 }
@@ -145,7 +171,8 @@ async function sendShowPrompt(tabId, domain) {
     type: "SOFTBLOCK_SHOW",
     domain,
     allowedMinutes: ALLOWED_MINUTES,
-    defaultMinutes: DEFAULT_MINUTES
+    defaultMinutes: DEFAULT_MINUTES,
+    continueCooldownSeconds
   };
 
   for (let attempt = 0; attempt < 3; attempt += 1) {
@@ -178,7 +205,11 @@ async function evaluateTab(tabId, urlValue) {
 }
 
 chrome.runtime.onInstalled.addListener(async () => {
-  const current = await chrome.storage.local.get([BLOCKED_DOMAINS_KEY, ALLOWANCES_KEY]);
+  const current = await chrome.storage.local.get([
+    BLOCKED_DOMAINS_KEY,
+    ALLOWANCES_KEY,
+    CONTINUE_COOLDOWN_SECONDS_KEY
+  ]);
 
   if (!Array.isArray(current[BLOCKED_DOMAINS_KEY])) {
     await chrome.storage.local.set({ [BLOCKED_DOMAINS_KEY]: [] });
@@ -186,6 +217,12 @@ chrome.runtime.onInstalled.addListener(async () => {
 
   if (!current[ALLOWANCES_KEY] || typeof current[ALLOWANCES_KEY] !== "object") {
     await chrome.storage.local.set({ [ALLOWANCES_KEY]: {} });
+  }
+
+  if (typeof current[CONTINUE_COOLDOWN_SECONDS_KEY] !== "number") {
+    await chrome.storage.local.set({
+      [CONTINUE_COOLDOWN_SECONDS_KEY]: DEFAULT_CONTINUE_COOLDOWN_SECONDS
+    });
   }
 
   await loadState();
@@ -212,6 +249,12 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
       ? changes[ALLOWANCES_KEY].newValue
       : {};
     allowances = nextAllowances;
+  }
+
+  if (changes[CONTINUE_COOLDOWN_SECONDS_KEY]) {
+    continueCooldownSeconds = sanitizeCooldownSeconds(
+      changes[CONTINUE_COOLDOWN_SECONDS_KEY].newValue
+    );
   }
 });
 

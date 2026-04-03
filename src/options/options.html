@@ -24,6 +24,15 @@
       </section>
 
       <section class="card">
+        <label for="cooldownSecondsInput">Continue cooldown (seconds)</label>
+        <div class="row">
+          <input id="cooldownSecondsInput" type="number" min="0" max="60" step="1" />
+          <button id="saveCooldownButton" type="button">Save cooldown</button>
+        </div>
+        <p class="hint">This controls how long the Continue button stays locked in the blocking popup.</p>
+      </section>
+
+      <section class="card">
         <h2>Blocked domains</h2>
         <ul id="domainList" class="domain-list"></ul>
       </section>

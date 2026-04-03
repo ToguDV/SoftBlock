@@ -138,6 +138,12 @@ button:disabled {
   color: var(--danger);
 }
 
+.hint {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .domain-list {
   margin: 0;
   padding: 0;

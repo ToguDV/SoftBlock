@@ -1,9 +1,33 @@
 const BLOCKED_DOMAINS_KEY = "blockedDomains";
+const CONTINUE_COOLDOWN_SECONDS_KEY = "continueCooldownSeconds";
+const DEFAULT_CONTINUE_COOLDOWN_SECONDS = 5;
+const MIN_CONTINUE_COOLDOWN_SECONDS = 0;
+const MAX_CONTINUE_COOLDOWN_SECONDS = 60;
 
 const domainInput = document.getElementById("domainInput");
 const addDomainButton = document.getElementById("addDomainButton");
+const cooldownSecondsInput = document.getElementById("cooldownSecondsInput");
+const saveCooldownButton = document.getElementById("saveCooldownButton");
 const domainList = document.getElementById("domainList");
 const feedback = document.getElementById("feedback");
+
+function sanitizeCooldownSeconds(rawValue) {
+  const parsed = Number(rawValue);
+  if (!Number.isFinite(parsed)) {
+    return DEFAULT_CONTINUE_COOLDOWN_SECONDS;
+  }
+
+  const rounded = Math.round(parsed);
+  if (rounded < MIN_CONTINUE_COOLDOWN_SECONDS) {
+    return MIN_CONTINUE_COOLDOWN_SECONDS;
+  }
+
+  if (rounded > MAX_CONTINUE_COOLDOWN_SECONDS) {
+    return MAX_CONTINUE_COOLDOWN_SECONDS;
+  }
+
+  return rounded;
+}
 
 function normalizeDomain(rawValue) {
   if (!rawValue || typeof rawValue !== "string") {
@@ -33,6 +57,17 @@ async function getDomains() {
 
 async function saveDomains(domains) {
   await chrome.storage.local.set({ [BLOCKED_DOMAINS_KEY]: domains });
+}
+
+async function getContinueCooldownSeconds() {
+  const data = await chrome.storage.local.get(CONTINUE_COOLDOWN_SECONDS_KEY);
+  return sanitizeCooldownSeconds(data[CONTINUE_COOLDOWN_SECONDS_KEY]);
+}
+
+async function saveContinueCooldownSeconds(seconds) {
+  const sanitizedSeconds = sanitizeCooldownSeconds(seconds);
+  await chrome.storage.local.set({ [CONTINUE_COOLDOWN_SECONDS_KEY]: sanitizedSeconds });
+  return sanitizedSeconds;
 }
 
 function setFeedback(message, isError = false) {
@@ -105,6 +140,18 @@ async function addDomain() {
   setFeedback(`Great, we saved ${normalized}.`);
 }
 
+async function renderCooldownSetting() {
+  const seconds = await getContinueCooldownSeconds();
+  cooldownSecondsInput.value = String(seconds);
+}
+
+async function saveCooldownSetting() {
+  const rawValue = cooldownSecondsInput.value;
+  const savedSeconds = await saveContinueCooldownSeconds(rawValue);
+  cooldownSecondsInput.value = String(savedSeconds);
+  setFeedback(`Continue cooldown updated to ${savedSeconds} second${savedSeconds === 1 ? "" : "s"}.`);
+}
+
 addDomainButton.addEventListener("click", () => {
   addDomain().catch(() => {
     setFeedback("We could not save the domain. Please try again.", true);
@@ -118,6 +165,23 @@ domainInput.addEventListener("keydown", (event) => {
   }
 });
 
+saveCooldownButton.addEventListener("click", () => {
+  saveCooldownSetting().catch(() => {
+    setFeedback("We could not save the cooldown right now. Please try again.", true);
+  });
+});
+
+cooldownSecondsInput.addEventListener("keydown", (event) => {
+  if (event.key === "Enter") {
+    event.preventDefault();
+    saveCooldownButton.click();
+  }
+});
+
 renderDomains().catch(() => {
   setFeedback("We could not load your domains right now.", true);
+});
+
+renderCooldownSetting().catch(() => {
+  setFeedback("We could not load the cooldown setting right now.", true);
 });
