@@ -31,43 +31,48 @@
     overlay.style.position = "fixed";
     overlay.style.inset = "0";
     overlay.style.zIndex = "2147483647";
-    overlay.style.background = "rgba(9, 15, 33, 0.70)";
+    overlay.style.background = "radial-gradient(circle at 20% 10%, rgba(89, 45, 156, 0.35) 0%, rgba(5, 4, 10, 0.82) 55%, rgba(5, 4, 10, 0.88) 100%)";
     overlay.style.display = "flex";
     overlay.style.alignItems = "center";
     overlay.style.justifyContent = "center";
-    overlay.style.backdropFilter = "blur(2px)";
+    overlay.style.backdropFilter = "blur(5px)";
     overlay.style.padding = "16px";
 
     const panel = document.createElement("div");
     panel.style.width = "min(460px, 100%)";
-    panel.style.background = "#fffdf8";
-    panel.style.color = "#151515";
-    panel.style.border = "2px solid #1f2937";
-    panel.style.borderRadius = "16px";
-    panel.style.padding = "20px";
-    panel.style.fontFamily = "ui-sans-serif, -apple-system, Segoe UI, sans-serif";
-    panel.style.boxShadow = "0 30px 60px rgba(0,0,0,0.25)";
+    panel.style.background = "linear-gradient(160deg, #1b1231 0%, #120c24 100%)";
+    panel.style.color = "#f5f1ff";
+    panel.style.border = "1px solid rgba(184, 147, 255, 0.45)";
+    panel.style.borderRadius = "18px";
+    panel.style.padding = "22px";
+    panel.style.fontFamily = "Poppins, Nunito Sans, Trebuchet MS, sans-serif";
+    panel.style.boxShadow = "0 30px 70px rgba(0,0,0,0.5)";
 
     const title = document.createElement("h2");
     title.textContent = "Pausa consciente";
-    title.style.margin = "0 0 8px";
+    title.style.margin = "0 0 10px";
     title.style.fontSize = "24px";
+    title.style.letterSpacing = "0.01em";
 
     const subtitle = document.createElement("p");
-    subtitle.textContent = `Este dominio esta en tu lista: ${domain}`;
+    subtitle.textContent = `Estas por entrar a ${domain}, que esta en tu lista de pausa.`;
     subtitle.style.margin = "0 0 16px";
     subtitle.style.lineHeight = "1.4";
+    subtitle.style.color = "#d4c8ee";
 
     const selectLabel = document.createElement("label");
-    selectLabel.textContent = "Si continuas, no mostrar popup durante:";
+    selectLabel.textContent = "Si decides continuar, volver a preguntar en:";
     selectLabel.style.display = "block";
     selectLabel.style.marginBottom = "6px";
+    selectLabel.style.fontSize = "14px";
 
     const select = document.createElement("select");
     select.style.width = "100%";
     select.style.padding = "10px";
     select.style.borderRadius = "10px";
-    select.style.border = "1px solid #374151";
+    select.style.border = "1px solid rgba(184, 147, 255, 0.5)";
+    select.style.background = "rgba(11, 8, 24, 0.8)";
+    select.style.color = "#f5f1ff";
     select.style.marginBottom = "16px";
 
     allowedMinutes.forEach((minutes) => {
@@ -88,29 +93,29 @@
     continueButton.textContent = "Continuar";
     continueButton.style.flex = "1";
     continueButton.style.padding = "11px";
-    continueButton.style.background = "#0f766e";
-    continueButton.style.color = "#ffffff";
+    continueButton.style.background = "linear-gradient(150deg, #c39dff 0%, #8b5cf6 100%)";
+    continueButton.style.color = "#160b28";
     continueButton.style.border = "none";
     continueButton.style.borderRadius = "10px";
     continueButton.style.cursor = "pointer";
     continueButton.style.fontWeight = "600";
 
     const cancelButton = document.createElement("button");
-    cancelButton.textContent = "No continuar";
+    cancelButton.textContent = "Cerrar pestana";
     cancelButton.style.flex = "1";
     cancelButton.style.padding = "11px";
-    cancelButton.style.background = "#b91c1c";
-    cancelButton.style.color = "#ffffff";
+    cancelButton.style.background = "linear-gradient(140deg, #ff95ac 0%, #f16887 100%)";
+    cancelButton.style.color = "#290613";
     cancelButton.style.border = "none";
     cancelButton.style.borderRadius = "10px";
     cancelButton.style.cursor = "pointer";
     cancelButton.style.fontWeight = "600";
 
     const hint = document.createElement("p");
-    hint.textContent = "Debes elegir una opcion para continuar.";
+    hint.textContent = "Elige una opcion para continuar con claridad.";
     hint.style.margin = "12px 0 0";
     hint.style.fontSize = "13px";
-    hint.style.opacity = "0.8";
+    hint.style.color = "#ac9acb";
 
     actions.appendChild(continueButton);
     actions.appendChild(cancelButton);
@@ -136,7 +141,7 @@
     cancelButton.addEventListener("click", () => {
       cancelButton.disabled = true;
       continueButton.disabled = true;
-      cancelButton.textContent = "Cerrando pestana...";
+      cancelButton.textContent = "Cerrando...";
       chrome.runtime.sendMessage({ type: "SOFTBLOCK_CANCEL" }).catch(() => {});
     });
 

@@ -58,7 +58,7 @@ function createDomainItem(domain) {
     const nextDomains = domains.filter((entry) => entry !== domain);
     await saveDomains(nextDomains);
     await renderDomains();
-    setFeedback(`Eliminado: ${domain}`);
+    setFeedback(`Listo, quitamos ${domain} de tu lista.`);
   });
 
   item.appendChild(name);
@@ -73,7 +73,7 @@ async function renderDomains() {
   if (!domains.length) {
     const empty = document.createElement("li");
     empty.className = "empty-state";
-    empty.textContent = "No hay dominios bloqueados.";
+    empty.textContent = "Aun no agregaste dominios. Puedes empezar con uno que te distraiga seguido.";
     domainList.appendChild(empty);
     return;
   }
@@ -87,13 +87,13 @@ async function addDomain() {
   const normalized = normalizeDomain(domainInput.value);
 
   if (!normalized) {
-    setFeedback("Ingresa un dominio valido, por ejemplo: youtube.com", true);
+    setFeedback("Escribe un dominio valido, por ejemplo: youtube.com", true);
     return;
   }
 
   const domains = await getDomains();
   if (domains.includes(normalized)) {
-    setFeedback("Ese dominio ya esta en la lista.", true);
+    setFeedback("Ese dominio ya esta en tu lista.", true);
     return;
   }
 
@@ -102,12 +102,12 @@ async function addDomain() {
 
   domainInput.value = "";
   await renderDomains();
-  setFeedback(`Agregado: ${normalized}`);
+  setFeedback(`Perfecto, guardamos ${normalized}.`);
 }
 
 addDomainButton.addEventListener("click", () => {
   addDomain().catch(() => {
-    setFeedback("No se pudo guardar el dominio.", true);
+    setFeedback("No pudimos guardar el dominio. Intentalo otra vez.", true);
   });
 });
 
@@ -119,5 +119,5 @@ domainInput.addEventListener("keydown", (event) => {
 });
 
 renderDomains().catch(() => {
-  setFeedback("No se pudieron cargar los dominios.", true);
+  setFeedback("No pudimos cargar tus dominios por ahora.", true);
 });
