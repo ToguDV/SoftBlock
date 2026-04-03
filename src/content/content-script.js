@@ -146,14 +146,96 @@
         font-size: 14px;
       }
 
-      .softblock-select {
-        width: 100%;
+      .softblock-dropdown {
+        position: relative;
         margin-bottom: 16px;
-        padding: 10px;
+      }
+
+      .softblock-dropdown-trigger {
+        position: relative;
+        width: 100%;
+        padding: 11px 42px 11px 12px;
         border: 1px solid rgba(184, 147, 255, 0.5);
-        border-radius: 10px;
-        background: rgba(11, 8, 24, 0.8);
+        border-radius: 12px;
+        background: rgba(11, 8, 24, 0.82);
         color: #f5f1ff;
+        font: inherit;
+        text-align: left;
+        outline: none;
+        transition: border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease;
+        cursor: pointer;
+      }
+
+      .softblock-dropdown-trigger::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        right: 16px;
+        width: 8px;
+        height: 8px;
+        border-right: 1.6px solid #d7c3ff;
+        border-bottom: 1.6px solid #d7c3ff;
+        transform: translateY(-62%) rotate(45deg);
+        pointer-events: none;
+      }
+
+      .softblock-dropdown-trigger:hover {
+        border-color: rgba(198, 166, 255, 0.72);
+      }
+
+      .softblock-dropdown-trigger:focus {
+        border-color: #c39dff;
+        box-shadow: 0 0 0 4px rgba(182, 140, 255, 0.3);
+      }
+
+      .softblock-dropdown.open .softblock-dropdown-trigger {
+        border-color: rgba(198, 166, 255, 0.72);
+        box-shadow: 0 0 0 4px rgba(182, 140, 255, 0.22);
+      }
+
+      .softblock-dropdown-menu {
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 0;
+        right: 0;
+        margin: 0;
+        padding: 6px;
+        list-style: none;
+        border: 1px solid rgba(184, 147, 255, 0.45);
+        border-radius: 12px;
+        background: #140e26;
+        box-shadow: 0 14px 32px rgba(0, 0, 0, 0.45);
+        display: none;
+        z-index: 2;
+      }
+
+      .softblock-dropdown.open .softblock-dropdown-menu {
+        display: block;
+      }
+
+      .softblock-dropdown-option {
+        width: 100%;
+        border: none;
+        border-radius: 9px;
+        background: transparent;
+        color: #f5f1ff;
+        font: inherit;
+        text-align: left;
+        padding: 9px 10px;
+        cursor: pointer;
+        transition: background-color 120ms ease, color 120ms ease;
+      }
+
+      .softblock-dropdown-option:hover,
+      .softblock-dropdown-option:focus {
+        background: #3f2a66;
+        color: #fff7ff;
+        outline: none;
+      }
+
+      .softblock-dropdown-option.is-selected {
+        background: #5b3c90;
+        color: #fff7ff;
       }
 
       .softblock-actions {
@@ -217,18 +299,89 @@
     selectLabel.textContent = "If you decide to continue, ask again in:";
     selectLabel.className = "softblock-label";
 
-    const select = document.createElement("select");
-    select.className = "softblock-select";
+    const normalizedMinutes = allowedMinutes
+      .map((minutes) => Number(minutes))
+      .filter((minutes) => Number.isFinite(minutes) && minutes > 0);
 
-    allowedMinutes.forEach((minutes) => {
-      const option = document.createElement("option");
-      option.value = String(minutes);
-      option.textContent = `${minutes} minute${minutes === 1 ? "" : "s"}`;
-      if (minutes === defaultMinutes) {
-        option.selected = true;
-      }
-      select.appendChild(option);
+    if (normalizedMinutes.length === 0) {
+      normalizedMinutes.push(1, 5, 15, 30);
+    }
+
+    let selectedMinutes = normalizedMinutes.includes(defaultMinutes)
+      ? defaultMinutes
+      : normalizedMinutes[0];
+
+    const formatMinutesLabel = (minutes) => `${minutes} minute${minutes === 1 ? "" : "s"}`;
+
+    const dropdown = document.createElement("div");
+    dropdown.className = "softblock-dropdown";
+
+    const dropdownTrigger = document.createElement("button");
+    dropdownTrigger.type = "button";
+    dropdownTrigger.className = "softblock-dropdown-trigger";
+    dropdownTrigger.setAttribute("aria-haspopup", "listbox");
+    dropdownTrigger.setAttribute("aria-expanded", "false");
+    dropdownTrigger.textContent = formatMinutesLabel(selectedMinutes);
+
+    const dropdownMenu = document.createElement("ul");
+    dropdownMenu.className = "softblock-dropdown-menu";
+    dropdownMenu.setAttribute("role", "listbox");
+
+    const optionButtons = [];
+    const renderSelectedOption = () => {
+      dropdownTrigger.textContent = formatMinutesLabel(selectedMinutes);
+      optionButtons.forEach(({ minutes, button }) => {
+        const isSelected = minutes === selectedMinutes;
+        button.classList.toggle("is-selected", isSelected);
+        button.setAttribute("aria-selected", isSelected ? "true" : "false");
+      });
+    };
+
+    const setDropdownOpen = (nextOpen) => {
+      dropdown.classList.toggle("open", nextOpen);
+      dropdownTrigger.setAttribute("aria-expanded", nextOpen ? "true" : "false");
+    };
+
+    normalizedMinutes.forEach((minutes) => {
+      const item = document.createElement("li");
+      const optionButton = document.createElement("button");
+      optionButton.type = "button";
+      optionButton.className = "softblock-dropdown-option";
+      optionButton.textContent = formatMinutesLabel(minutes);
+      optionButton.setAttribute("role", "option");
+      optionButton.setAttribute("aria-selected", "false");
+
+      optionButton.addEventListener("click", () => {
+        selectedMinutes = minutes;
+        renderSelectedOption();
+        setDropdownOpen(false);
+      });
+
+      optionButtons.push({ minutes, button: optionButton });
+      item.appendChild(optionButton);
+      dropdownMenu.appendChild(item);
     });
+
+    dropdownTrigger.addEventListener("click", () => {
+      const isOpen = dropdown.classList.contains("open");
+      setDropdownOpen(!isOpen);
+    });
+
+    shadow.addEventListener("click", (event) => {
+      if (dropdown.classList.contains("open") && !dropdown.contains(event.target)) {
+        setDropdownOpen(false);
+      }
+    });
+
+    shadow.addEventListener("keydown", (event) => {
+      if (event.key === "Escape") {
+        setDropdownOpen(false);
+      }
+    });
+
+    dropdown.appendChild(dropdownTrigger);
+    dropdown.appendChild(dropdownMenu);
+    renderSelectedOption();
 
     const actions = document.createElement("div");
     actions.className = "softblock-actions";
@@ -284,7 +437,7 @@
     panel.appendChild(title);
     panel.appendChild(subtitle);
     panel.appendChild(selectLabel);
-    panel.appendChild(select);
+    panel.appendChild(dropdown);
     panel.appendChild(actions);
     panel.appendChild(countdown);
     panel.appendChild(hint);
@@ -293,7 +446,7 @@
     shadow.appendChild(overlay);
 
     continueButton.addEventListener("click", () => {
-      const minutes = Number(select.value);
+      const minutes = Number(selectedMinutes);
       chrome.runtime.sendMessage({
         type: "SOFTBLOCK_CONTINUE",
         domain,
